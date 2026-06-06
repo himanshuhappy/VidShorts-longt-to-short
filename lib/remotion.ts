@@ -52,6 +52,10 @@ export async function renderVideo({
       throw new Error("serveUrl (deployed Remotion site URL) is required to render a video.");
     }
 
+    const startTimeSec = inputProps.startTimeSec ?? 0;
+    const endTimeSec = inputProps.endTimeSec ?? 10;
+    const durationInFrames = Math.max(1, Math.round((endTimeSec - startTimeSec) * 30)); // Assuming 30fps
+
     const { renderId, bucketName } = await renderMediaOnLambda({
       region: REGION,
       functionName,
@@ -60,7 +64,8 @@ export async function renderVideo({
       inputProps,
       codec: "h264",
       privacy: "public",
-      concurrency: 5,
+      frameRange: [0, durationInFrames - 1],
+      concurrency: 10,
     });
 
     console.log(`[Remotion Lambda] Triggered render ${renderId} in S3 bucket ${bucketName}`);

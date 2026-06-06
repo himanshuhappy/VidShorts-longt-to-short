@@ -36,7 +36,9 @@ export const videoUploadFunction = inngest.createFunction(
 
     // Called when ALL retries are exhausted — marks DB as failed
     onFailure: async ({ event, error }) => {
-      const { projectId } = (event.data ?? {}) as { projectId?: string };
+      // In Inngest failure events, the original event payload is inside event.data.event.data
+      const originalData = (event.data as any)?.event?.data ?? {};
+      const projectId = originalData.projectId;
       if (projectId) {
         await updateProject(projectId, {
           status: "failed",

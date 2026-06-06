@@ -37,7 +37,9 @@ export const videoRenderFunction = inngest.createFunction(
     triggers: [{ event: "clip/render.requested" }],
 
     onFailure: async ({ event, error }) => {
-      const { clipId } = (event.data ?? {}) as { clipId?: number };
+      // In Inngest failure events, the original event payload is inside event.data.event.data
+      const originalData = (event.data as any)?.event?.data ?? {};
+      const clipId = originalData.clipId;
       logToFile(`onFailure triggered for clipId ${clipId}. Error: ${error.message}`);
       if (clipId) {
         await updateClip(clipId, {
@@ -107,15 +109,10 @@ export const videoRenderFunction = inngest.createFunction(
 
     // ── Step 3: Generate presigned URL if source is in S3 ────────────────────
     const presignedUrl = await step.run("get-presigned-url", async () => {
-      logToFile(`Step get-presigned-url: checking prefix of ${info.videoSource}`);
-      if (info.videoSource.startsWith("http")) {
-        logToFile("videoSource is already an http URL.");
-        return info.videoSource;
-      }
-      logToFile("videoSource is a relative path. Generating presigned S3 URL...");
+      logToFile(`Step get-presigned-url: generating presigned URL for ${info.videoSource}`);
       const { getPresignedUrl } = await import("@/lib/s3/presign");
       const url = await getPresignedUrl(info.videoSource);
-      logToFile(`Presigned URL generated: ${url}`);
+      logToFile(`Presigned URL generated (or bypassed): ${url}`);
       return url;
     });
 

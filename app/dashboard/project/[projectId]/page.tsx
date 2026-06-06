@@ -259,12 +259,12 @@ export default function ProjectPage() {
   const handleDownload = async () => {
     if (!project || !selectedClip) return;
 
-    // If video is already rendered, download it directly
+    // If video is already rendered, download it directly via download proxy
     if (selectedClip.videoUrl) {
+      const filename = `${project.title.replace(/\s+/g, "_")}_clip_${selectedClipIndex + 1}.mp4`;
+      const downloadUrl = `/api/download?url=${encodeURIComponent(selectedClip.videoUrl)}&filename=${encodeURIComponent(filename)}`;
       const link = document.createElement("a");
-      link.href = selectedClip.videoUrl;
-      link.setAttribute("download", `${project.title.replace(/\s+/g, "_")}_clip_${selectedClipIndex + 1}.mp4`);
-      link.target = "_blank";
+      link.href = downloadUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -311,11 +311,11 @@ export default function ProjectPage() {
         setIsRenderDialogOpen(false);
         toast.success("Clip rendered and downloaded successfully!");
 
-        // Trigger file download
+        // Trigger file download via download proxy
+        const filename = `${project?.title.replace(/\s+/g, "_") || "clip"}_clip_${selectedClipIndex + 1}.mp4`;
+        const downloadUrl = `/api/download?url=${encodeURIComponent(selectedClip.videoUrl)}&filename=${encodeURIComponent(filename)}`;
         const link = document.createElement("a");
-        link.href = selectedClip.videoUrl;
-        link.setAttribute("download", `${project?.title.replace(/\s+/g, "_")}_clip_${selectedClipIndex + 1}.mp4`);
-        link.target = "_blank";
+        link.href = downloadUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
